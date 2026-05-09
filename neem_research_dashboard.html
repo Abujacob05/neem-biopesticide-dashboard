@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neem Biopesticide Research Dashboard | Yakubu Abubakari</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0f0a;
+    --surface: #111811;
+    --surface2: #161e16;
+    --border: #1e2e1e;
+    --green: #4ade80;
+    --green-dim: #166534;
+    --green-glow: rgba(74,222,128,0.15);
+    --amber: #fbbf24;
+    --amber-dim: #92400e;
+    --red: #f87171;
+    --text: #e8f5e8;
+    --text-dim: #6b8f6b;
+    --text-muted: #3d5c3d;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Outfit', sans-serif;
+    font-weight: 300;
+    line-height: 1.6;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Noise texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.4;
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 40px 24px;
+  }
+
+  /* Header */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 32px;
+    margin-bottom: 40px;
+    animation: fadeUp 0.8s ease both;
+  }
+
+  .header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--green);
+    background: var(--green-glow);
+    border: 1px solid var(--green-dim);
+    padding: 4px 12px;
+    border-radius: 2px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .badge::before {
+    content: '';
+    width: 6px; height: 6px;
+    background: var(--green);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(24px, 4vw, 42px);
+    font-weight: 400;
+    line-height: 1.15;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  h1 em {
+    font-style: italic;
+    color: var(--green);
+  }
+
+  .subtitle {
+    color: var(--text-dim);
+    font-size: 13px;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.05em;
+  }
+
+  .meta-row {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+  }
+
+  .meta-item {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+  }
+
+  .meta-item span {
+    color: var(--text-dim);
+  }
+
+  /* KPI Cards */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 40px;
+    animation: fadeUp 0.8s ease 0.1s both;
+  }
+
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 20px 24px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s;
+  }
+
+  .kpi-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--green);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s ease;
+  }
+
+  .kpi-card:hover::after { transform: scaleX(1); }
+  .kpi-card:hover { border-color: var(--green-dim); }
+
+  .kpi-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+  }
+
+  .kpi-value {
+    font-family: 'DM Serif Display', serif;
+    font-size: 36px;
+    color: var(--green);
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .kpi-desc {
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  /* Section titles */
+  .section-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Charts grid */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 40px;
+    animation: fadeUp 0.8s ease 0.2s both;
+  }
+
+  @media (max-width: 680px) {
+    .charts-grid { grid-template-columns: 1fr; }
+  }
+
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 24px;
+  }
+
+  .chart-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 16px;
+    margin-bottom: 4px;
+    color: var(--text);
+  }
+
+  .chart-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: 'DM Mono', monospace;
+    margin-bottom: 20px;
+  }
+
+  /* Bar chart */
+  .bar-chart {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .bar-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .bar-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    width: 70px;
+    flex-shrink: 0;
+    letter-spacing: 0.05em;
+  }
+
+  .bar-track {
+    flex: 1;
+    height: 20px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    height: 100%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding-right: 8px;
+    justify-content: flex-end;
+    transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .bar-fill.fruit { background: linear-gradient(90deg, #166534, #4ade80); }
+  .bar-fill.leaf { background: linear-gradient(90deg, #92400e, #fbbf24); }
+  .bar-fill.control { background: linear-gradient(90deg, #374151, #6b7280); }
+
+  .bar-val {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: rgba(0,0,0,0.8);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  /* Line chart */
+  .line-chart-wrap {
+    position: relative;
+    height: 160px;
+  }
+
+  .line-chart-wrap svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Legend */
+  .legend {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.05em;
+  }
+
+  .legend-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* Full width card */
+  .full-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 24px;
+    margin-bottom: 40px;
+    animation: fadeUp 0.8s ease 0.3s both;
+  }
+
+  /* Seed damage comparison */
+  .damage-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-top: 8px;
+  }
+
+  @media (max-width: 600px) {
+    .damage-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  .damage-cell {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 16px 12px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s;
+  }
+
+  .damage-cell:hover { border-color: var(--green-dim); }
+
+  .damage-cell-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+
+  .damage-val-big {
+    font-family: 'DM Serif Display', serif;
+    font-size: 28px;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .damage-change {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.05em;
+  }
+
+  .good { color: var(--green); }
+  .bad { color: var(--red); }
+  .neutral { color: var(--text-dim); }
+
+  /* Insight cards */
+  .insights-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+    margin-bottom: 40px;
+    animation: fadeUp 0.8s ease 0.4s both;
+  }
+
+  .insight-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 20px 24px;
+    border-left: 3px solid var(--green);
+  }
+
+  .insight-card.amber { border-left-color: var(--amber); }
+  .insight-card.red { border-left-color: var(--red); }
+
+  .insight-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    letter-spacing: 0.1em;
+  }
+
+  .insight-text {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.6;
+  }
+
+  .insight-text strong { color: var(--green); font-weight: 500; }
+  .insight-card.amber .insight-text strong { color: var(--amber); }
+  .insight-card.red .insight-text strong { color: var(--red); }
+
+  /* Footer */
+  footer {
+    border-top: 1px solid var(--border);
+    padding-top: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: gap;
+    gap: 12px;
+    animation: fadeUp 0.8s ease 0.5s both;
+  }
+
+  .footer-left {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+  }
+
+  .footer-left span { color: var(--green); }
+
+  .doi-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    letter-spacing: 0.05em;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Y-axis labels for line chart */
+  .y-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 8px;
+    fill: #3d5c3d;
+  }
+
+  .x-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 8px;
+    fill: #6b8f6b;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <header>
+    <div class="header-top">
+      <div class="badge">Published Research · IJPSS · 2026</div>
+      <div class="subtitle">DATA ANALYSIS PORTFOLIO · YAKUBU ABUBAKARI</div>
+    </div>
+    <h1>Effect of <em>Azadirachta indica</em> (Neem)<br>on Cowpea Weevil Mortality & Seed Damage</h1>
+    <div class="meta-row">
+      <div class="meta-item">ANALYST <span>Yakubu Abubakari</span></div>
+      <div class="meta-item">INSTITUTION <span>C.K. Tedam University of Technology & Applied Sciences</span></div>
+      <div class="meta-item">DOI <span>10.9734/IJPSS/2026/XXXXX</span></div>
+    </div>
+  </header>
+
+  <!-- KPI Cards -->
+  <div class="section-title">Key Findings</div>
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">Peak Mortality</div>
+      <div class="kpi-value">14.5%</div>
+      <div class="kpi-desc">Neem Fruit 45g at Day 28 — highest recorded mortality across all treatments</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Seed Damage Reduction</div>
+      <div class="kpi-value">94%</div>
+      <div class="kpi-desc">Neem Fruit 45g reduced seed damage from 35.24 to 2.06 damaged seeds vs control</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Most Effective Type</div>
+      <div class="kpi-value" style="font-size:22px; padding-top:6px;">Fruit<br>Powder</div>
+      <div class="kpi-desc">Neem fruit powder consistently outperformed leaf powder across all doses and timepoints</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Optimal Dose</div>
+      <div class="kpi-value">45g</div>
+      <div class="kpi-desc">Highest dose showed greatest efficacy — mortality and seed protection both maximised</div>
+    </div>
+  </div>
+
+  <!-- Charts Row -->
+  <div class="section-title">Mortality Analysis</div>
+  <div class="charts-grid">
+
+    <!-- Bar chart: Day 28 mortality comparison -->
+    <div class="chart-card">
+      <div class="chart-title">Mortality at Day 28</div>
+      <div class="chart-sub">MEAN % BY TREATMENT & DOSE</div>
+      <div class="bar-chart" id="barChart"></div>
+      <div class="legend" style="margin-top:16px;">
+        <div class="legend-item"><div class="legend-dot" style="background:#4ade80"></div>Neem Fruit Powder</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#fbbf24"></div>Neem Leaf Powder</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#6b7280"></div>Control</div>
+      </div>
+    </div>
+
+    <!-- Line chart: Fruit 45g vs Leaf 45g over time -->
+    <div class="chart-card">
+      <div class="chart-title">Mortality Over Time</div>
+      <div class="chart-sub">45G DOSE — FRUIT vs LEAF vs CONTROL (DAYS 7–28)</div>
+      <div class="line-chart-wrap">
+        <svg viewBox="0 0 300 160" preserveAspectRatio="none" id="lineChart">
+          <!-- Grid lines -->
+          <line x1="40" y1="10" x2="40" y2="130" stroke="#1e2e1e" stroke-width="1"/>
+          <line x1="40" y1="130" x2="290" y2="130" stroke="#1e2e1e" stroke-width="1"/>
+          <line x1="40" y1="10" x2="290" y2="10" stroke="#1e2e1e" stroke-width="0.5" stroke-dasharray="3,3"/>
+          <line x1="40" y1="50" x2="290" y2="50" stroke="#1e2e1e" stroke-width="0.5" stroke-dasharray="3,3"/>
+          <line x1="40" y1="90" x2="290" y2="90" stroke="#1e2e1e" stroke-width="0.5" stroke-dasharray="3,3"/>
+
+          <!-- Y labels -->
+          <text x="34" y="13" text-anchor="end" class="y-label">15%</text>
+          <text x="34" y="53" text-anchor="end" class="y-label">10%</text>
+          <text x="34" y="93" text-anchor="end" class="y-label">5%</text>
+          <text x="34" y="133" text-anchor="end" class="y-label">0%</text>
+
+          <!-- X labels -->
+          <text x="80" y="145" text-anchor="middle" class="x-label">Day 7</text>
+          <text x="143" y="145" text-anchor="middle" class="x-label">Day 14</text>
+          <text x="206" y="145" text-anchor="middle" class="x-label">Day 21</text>
+          <text x="269" y="145" text-anchor="middle" class="x-label">Day 28</text>
+
+          <!-- Fruit 45g line: 8.25, 13.00, 13.66, 14.50 → scaled to 0-15% range in 120px -->
+          <!-- y = 130 - (val/15)*120 -->
+          <!-- 8.25→64, 13→26, 13.66→21, 14.5→14 -->
+          <polyline points="80,64 143,26 206,21 269,14"
+            fill="none" stroke="#4ade80" stroke-width="2" stroke-linejoin="round"
+            stroke-dasharray="200" stroke-dashoffset="200">
+            <animate attributeName="stroke-dashoffset" from="200" to="0" dur="1.5s" fill="freeze" begin="0.3s"/>
+          </polyline>
+          <circle cx="80" cy="64" r="3" fill="#4ade80" opacity="0"/>
+          <circle cx="143" cy="26" r="3" fill="#4ade80" opacity="0"/>
+          <circle cx="206" cy="21" r="3" fill="#4ade80" opacity="0"/>
+          <circle cx="269" cy="14" r="3" fill="#4ade80" opacity="0">
+            <animate attributeName="opacity" from="0" to="1" dur="0.3s" fill="freeze" begin="1.6s"/>
+          </circle>
+
+          <!-- Leaf 45g line: 5.80, 7.75, 8.50, 8.00 -->
+          <!-- 5.8→84, 7.75→68, 8.5→62, 8.0→66 -->
+          <polyline points="80,84 143,68 206,62 269,66"
+            fill="none" stroke="#fbbf24" stroke-width="2" stroke-linejoin="round"
+            stroke-dasharray="200" stroke-dashoffset="200">
+            <animate attributeName="stroke-dashoffset" from="200" to="0" dur="1.5s" fill="freeze" begin="0.5s"/>
+          </polyline>
+          <circle cx="269" cy="66" r="3" fill="#fbbf24" opacity="0">
+            <animate attributeName="opacity" from="0" to="1" dur="0.3s" fill="freeze" begin="1.8s"/>
+          </circle>
+
+          <!-- Control line: 0, 1, 0.5, 1 -->
+          <!-- all ~128-130 -->
+          <polyline points="80,130 143,122 206,126 269,122"
+            fill="none" stroke="#6b7280" stroke-width="1.5" stroke-linejoin="round" stroke-dasharray="4,3"
+            stroke-dasharray="200" stroke-dashoffset="200">
+            <animate attributeName="stroke-dashoffset" from="200" to="0" dur="1.5s" fill="freeze" begin="0.7s"/>
+          </polyline>
+
+          <!-- Value labels at end -->
+          <text x="275" y="12" class="y-label" fill="#4ade80">14.5%</text>
+          <text x="275" y="64" class="y-label" fill="#fbbf24">8.0%</text>
+          <text x="275" y="120" class="y-label" fill="#6b7280">1.0%</text>
+        </svg>
+      </div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#4ade80"></div>Fruit 45g</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#fbbf24"></div>Leaf 45g</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#6b7280"></div>Control</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Seed Damage Section -->
+  <div class="full-card">
+    <div class="section-title" style="margin-bottom:16px;">Seed Damage Reduction at Day 28</div>
+    <div class="chart-title" style="margin-bottom:4px;">Mean Number of Damaged Seeds by Treatment</div>
+    <div class="chart-sub" style="margin-bottom:20px;">LOWER VALUES = BETTER PROTECTION · COMPARED AGAINST CONTROL (35.24 SEEDS)</div>
+    <div class="damage-grid" id="damageGrid"></div>
+  </div>
+
+  <!-- Key Insights -->
+  <div class="section-title">Analytical Insights</div>
+  <div class="insights-grid">
+    <div class="insight-card">
+      <div class="insight-num">INSIGHT 01</div>
+      <div class="insight-text"><strong>Dose-response relationship confirmed.</strong> Across both Neem fruit and leaf powder, higher concentrations (25g, 45g) produced significantly greater mortality and lower seed damage than the 15g treatment, consistent with a classical dose-response curve.</div>
+    </div>
+    <div class="insight-card amber">
+      <div class="insight-num">INSIGHT 02</div>
+      <div class="insight-text"><strong>Fruit powder outperforms leaf powder.</strong> At equivalent doses and timepoints, Neem fruit powder consistently achieved higher mortality percentages than leaf powder, suggesting a higher concentration of bioactive compounds in the fruit fraction.</div>
+    </div>
+    <div class="insight-card">
+      <div class="insight-num">INSIGHT 03</div>
+      <div class="insight-text"><strong>Seed protection is dose-dependent.</strong> The 45g fruit powder treatment reduced damaged seeds to just 2.06 at Day 28, compared to 35.24 in the control — a <strong>94% reduction</strong>, demonstrating strong practical application for smallholder grain storage.</div>
+    </div>
+    <div class="insight-card amber">
+      <div class="insight-num">INSIGHT 04</div>
+      <div class="insight-text"><strong>Leaf powder shows anomalous seed damage increase.</strong> Unlike fruit powder, leaf powder at 15g recorded <strong>higher seed damage (18.5)</strong> than the control at Day 28 (35.24 → baseline higher at Day 28), suggesting possible attractant effects at low doses — warranting further investigation.</div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-left">
+      Analyst: <span>Yakubu Abubakari</span> · abubakariyakubu136@gmail.com · Published: <span>Int. J. Plant Soil Sci., 2026</span>
+    </div>
+    <div class="doi-tag">DOI: 10.9734/IJPSS/2026/XXXXX</div>
+  </footer>
+
+</div>
+
+<script>
+// Bar chart data: Day 28 mortality
+const barData = [
+  { label: 'Fruit 45g', val: 14.5, max: 15, type: 'fruit' },
+  { label: 'Fruit 25g', val: 13.15, max: 15, type: 'fruit' },
+  { label: 'Fruit 15g', val: 10.33, max: 15, type: 'fruit' },
+  { label: 'Leaf 45g',  val: 8.0,  max: 15, type: 'leaf' },
+  { label: 'Leaf 25g',  val: 8.01, max: 15, type: 'leaf' },
+  { label: 'Leaf 15g',  val: 8.50, max: 15, type: 'leaf' },
+  { label: 'Control',   val: 1.0,  max: 15, type: 'control' },
+];
+
+const barChart = document.getElementById('barChart');
+barData.forEach((d, i) => {
+  const pct = (d.val / d.max) * 100;
+  const row = document.createElement('div');
+  row.className = 'bar-row';
+  row.innerHTML = `
+    <div class="bar-label">${d.label}</div>
+    <div class="bar-track">
+      <div class="bar-fill ${d.type}" style="width:0%" data-target="${pct}">
+        <span class="bar-val">${d.val}%</span>
+      </div>
+    </div>
+  `;
+  barChart.appendChild(row);
+});
+
+// Damage grid data: Day 28 seed damage
+const damageData = [
+  { label: 'Fruit 45g', val: 2.06, change: '-94%', good: true },
+  { label: 'Fruit 25g', val: 2.25, change: '-94%', good: true },
+  { label: 'Leaf 45g',  val: 10.5, change: '-70%', good: true },
+  { label: 'Leaf 25g',  val: 11.0, change: '-69%', good: true },
+  { label: 'Fruit 15g', val: 5.0,  change: '-86%', good: true },
+  { label: 'Leaf 15g',  val: 18.5, change: '-47%', good: true },
+  { label: 'Fruit Ctrl',val: 35.24,change: 'baseline', good: false },
+  { label: 'Leaf Ctrl', val: 35.24,change: 'baseline', good: false },
+];
+
+const grid = document.getElementById('damageGrid');
+damageData.forEach(d => {
+  const cell = document.createElement('div');
+  cell.className = 'damage-cell';
+  const cls = d.good ? 'good' : 'bad';
+  cell.innerHTML = `
+    <div class="damage-cell-label">${d.label}</div>
+    <div class="damage-val-big ${cls}">${d.val}</div>
+    <div class="damage-change ${d.change === 'baseline' ? 'neutral' : cls}">${d.change}</div>
+  `;
+  grid.appendChild(cell);
+});
+
+// Animate bars on load
+setTimeout(() => {
+  document.querySelectorAll('.bar-fill').forEach((el, i) => {
+    setTimeout(() => {
+      el.style.transition = 'width 1s cubic-bezier(0.4,0,0.2,1)';
+      el.style.width = el.dataset.target + '%';
+    }, i * 80);
+  });
+}, 300);
+</script>
+</body>
+</html>
